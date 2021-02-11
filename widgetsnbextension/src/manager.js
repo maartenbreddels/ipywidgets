@@ -298,6 +298,47 @@ export class WidgetManager extends ManagerBase {
       'save-clear-widgets',
       'widgets'
     );
+
+    this.extraMimeWidgetsAction = {
+      handler: async () => {
+        const models = this.get_models_sync();
+        for (var result of findViewsAndOutputs(Jupyter.notebook, models)) {
+          var bundle = await result.view.generateMimeBundleExtra();
+          console.log(result.view, bundle);
+          _.extend(result.output.data, bundle);
+        }
+        Jupyter.menubar.actions.get('jupyter-notebook:save-notebook').handler({
+          notebook: Jupyter.notebook
+        });
+      },
+      help: 'Add extra mime bundles to output cells'
+    };
+    Jupyter.menubar.actions.register(
+      this.saveWidgetsAction,
+      'mime-extra-widgets',
+      'widgets'
+    );
+
+    this.clearMimeWidgetsAction = {
+      handler: async () => {
+        const models = this.get_models_sync();
+        for (var result of findViewsAndOutputs(Jupyter.notebook, models)) {
+          result.output.data = _.pick(result.output.data, [
+            MIME_TYPE,
+            'text/plain'
+          ]);
+        }
+        Jupyter.menubar.actions.get('jupyter-notebook:save-notebook').handler({
+          notebook: Jupyter.notebook
+        });
+      },
+      help: 'Remove extra mime bundles from output cells'
+    };
+    Jupyter.menubar.actions.register(
+      this.saveWidgetsAction,
+      'mime-clear-widgets',
+      'widgets'
+    );
   }
 
   /**
@@ -324,6 +365,8 @@ export class WidgetManager extends ManagerBase {
 
     var divider = document.createElement('ul');
     divider.classList.add('divider');
+    var divider2 = document.createElement('ul');
+    divider2.classList.add('divider');
 
     widgetsSubmenu.appendChild(
       this._createMenuItem('Save Notebook Widget State', this.saveWidgetsAction)
@@ -340,6 +383,19 @@ export class WidgetManager extends ManagerBase {
     );
     widgetsSubmenu.appendChild(
       this._createMenuItem('Embed Widgets', embedWidgets.action)
+    );
+    widgetsSubmenu.appendChild(divider2);
+    widgetsSubmenu.appendChild(
+      this._createMenuItem(
+        'Add extra to output cell mime bundle',
+        this.extraMimeWidgetsAction
+      )
+    );
+    widgetsSubmenu.appendChild(
+      this._createMenuItem(
+        'Clear extras mime bundle',
+        this.clearMimeWidgetsAction
+      )
     );
   }
 

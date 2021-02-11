@@ -123,6 +123,7 @@ export class WidgetModel extends Backbone.Model {
     const comm = options.comm;
 
     this.views = Object.create(null);
+    this.viewsSync = new Map<string, WidgetView>();
     this.state_change = Promise.resolve();
 
     this._closed = false;
@@ -197,6 +198,7 @@ export class WidgetModel extends Backbone.Model {
       return this.views[id].then(view => view.remove());
     });
     delete this.views;
+    delete this.viewsSync;
     return Promise.all(views).then(() => {
       return;
     });
@@ -590,6 +592,7 @@ export class WidgetModel extends Backbone.Model {
   widget_manager: IWidgetManager;
   model_id: string;
   views: { [key: string]: Promise<WidgetView> };
+  viewsSync: Map<string, WidgetView>;
   state_change: Promise<any>;
   comm: IClassicComm;
   name: string;

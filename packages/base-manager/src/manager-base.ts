@@ -105,6 +105,7 @@ export abstract class ManagerBase implements IWidgetManager {
           // This presumes the view is added to the list of model views below
           view.once('remove', () => {
             delete model.views[id];
+            model.viewsSync.delete(id);
           });
 
           return view;
@@ -117,6 +118,7 @@ export abstract class ManagerBase implements IWidgetManager {
       }
     ));
     model.views[id] = viewPromise;
+    viewPromise.then(view => model.viewsSync.set(id, view));
     return viewPromise;
   }
 

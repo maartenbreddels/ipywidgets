@@ -26,15 +26,6 @@ export class ImageModel extends CoreDOMWidgetModel {
       }
     }
   };
-
-  async generateMimeBundle() {
-    const view: ImageView = await this.widget_manager.create_view<ImageView>(
-      this
-    );
-    return Promise.resolve({
-      'text/html': view.el.outerHTML
-    });
-  }
 }
 
 export class ImageView extends DOMWidgetView {
@@ -46,6 +37,19 @@ export class ImageView extends DOMWidgetView {
     this.pWidget.addClass('jupyter-widgets');
     this.pWidget.addClass('widget-image');
     this.update(); // Set defaults.
+  }
+
+  generateMimeBundle() {
+    return {};
+  }
+
+  async generateMimeBundleExtra() {
+    const view: ImageView = await this.model.widget_manager.create_view<
+      ImageView
+    >(this.model);
+    return {
+      'text/html': view.el.outerHTML
+    };
   }
 
   update(): void {

@@ -82,12 +82,6 @@ export class WidgetModel extends Backbone.Model {
     };
   }
 
-  async generateMimeBundle() {
-    return {
-      'text/html': '<h1>Hi!</h1>'
-    };
-  }
-
   /**
    * Test to see if the model has been synced with the server.
    *
@@ -684,6 +678,26 @@ export class WidgetView extends NativeView<WidgetModel> {
     } else if (content.do === 'blur') {
       this.el.blur();
     }
+  }
+
+  /**
+   * If widgets have other representations, they can return a custom mime bundle.
+   * Classic notebook and Jupyter lab call this when the notebook is saved to extend
+   * the cell output mimebundle.
+   */
+  generateMimeBundle() {
+    return {};
+  }
+
+  /**
+   * If widgets have extra representations, that are costly, or require async operations
+   * they can return a custom mimebundle.
+   * Classic notebook and Jupyter lab(TODO) can call this on user request (from the UI)
+   * Note that these are only extra entries, since on notebook save, the two mime bundles
+   * will be merged.
+   */
+  async generateMimeBundleExtra() {
+    return {};
   }
 
   /**

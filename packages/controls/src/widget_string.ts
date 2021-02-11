@@ -52,11 +52,6 @@ export class HTMLModel extends StringModel {
       _model_name: 'HTMLModel'
     };
   }
-  generateMimeBundle() {
-    return Promise.resolve({
-      'text/html': this.get('value')
-    });
-  }
 }
 
 export class HTMLView extends StringView {
@@ -70,6 +65,12 @@ export class HTMLView extends StringView {
     this.content.classList.add('widget-html-content');
     this.el.appendChild(this.content);
     this.update(); // Set defaults.
+  }
+
+  generateMimeBundle() {
+    return {
+      'text/html': this.model.get('value')
+    };
   }
 
   /**

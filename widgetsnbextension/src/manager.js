@@ -11,6 +11,38 @@ var embedWidgets = require('./embed_widgets');
 
 var MIME_TYPE = 'application/vnd.jupyter.widget-view+json';
 
+function findViewsAndOutputs(notebook, models) {
+  var results = [];
+  notebook.get_cells().forEach(cell => {
+    if (!(cell.output_area && cell.output_area.outputs)) {
+      return;
+    }
+    cell.output_area.outputs.forEach((output, output_index) => {
+      if (!(output.data && output.data[MIME_TYPE])) {
+        return;
+      }
+      // assuming the nth output corresponds to the nth element
+      const element = cell.output_area.element[output_index];
+      var model_id = output.data[MIME_TYPE].model_id;
+      var model = models.get(model_id);
+      if (!model) {
+        return;
+      }
+      // find the view corresponding to the output
+      var view = Array.from(model.viewsSync.values()).find(view => {
+        return element.contains(view.el);
+      });
+      // if we found the view, we inject the mime bundle
+      if (!view) {
+        console.log('No view found for model');
+        return;
+      }
+      results.push({ view, output });
+    });
+  });
+  return results;
+}
+
 function polyfill_new_comm_buffers(
   manager,
   target_name,
@@ -219,25 +251,13 @@ export class WidgetManager extends ManagerBase {
    */
   _init_actions() {
     var notifier = Jupyter.notification_area.widget('widgets');
-    this.notebook.events.on('before_save.Notebook', async () => {
-      var cells = Jupyter.notebook.get_cells();
-      // notebook.js save_notebook doesn't want for this promise, we are simply lucky when this
-      // finishes before saving.
-      await Promise.all(
-        cells.map(async cell => {
-          var widget_output = cell.output_area.outputs.find(output => {
-            return output.data && output.data[MIME_TYPE];
-          });
-          if (widget_output) {
-            var model_id = widget_output.data[MIME_TYPE].model_id;
-            var model = await this.get_model(model_id);
-            if (model) {
-              var bundle = await model.generateMimeBundle();
-              _.extend(widget_output.data, bundle);
-            }
-          }
-        })
-      );
+    this.notebook.events.on('before_save.Notebook', () => {
+      const models = this.get_models_sync();
+      for (var result of findViewsAndOutputs(Jupyter.notebook, models)) {
+        var bundle = result.view.generateMimeBundle();
+        console.log(result.view, bundle);
+        _.extend(result.output.data, bundle);
+      }
     });
     this.saveWidgetsAction = {
       handler: function() {

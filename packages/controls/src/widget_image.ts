@@ -40,15 +40,8 @@ export class ImageView extends DOMWidgetView {
   }
 
   generateMimeBundle() {
-    return {};
-  }
-
-  async generateMimeBundleExtra() {
-    const view: ImageView = await this.model.widget_manager.create_view<
-      ImageView
-    >(this.model);
     return {
-      'text/html': view.el.outerHTML
+      'text/html': this.el.outerHTML
     };
   }
 
